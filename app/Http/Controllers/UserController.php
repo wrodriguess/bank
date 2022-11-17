@@ -4,9 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Services\UserService;
 
 class UserController extends Controller
 {
+    public function __construct(UserService $userService)
+    {
+        $this->service = $userService;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -14,7 +20,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::all();
+        $users = $this->service->index();
         return $users;
     }
 
@@ -47,8 +53,7 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        $user = User::find($id);
-        $user['wallet'] = $user->wallet;
+        $user = $this->service->show($id);
         return $user;
     }
 

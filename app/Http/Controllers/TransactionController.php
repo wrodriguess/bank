@@ -5,11 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Services\TransactionService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class TransactionController extends Controller
 {
+    public function __construct(TransactionService $transactionService)
+    {
+        $this->service = $transactionService;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -36,29 +44,8 @@ class TransactionController extends Controller
      */
     public function store(Request $request)
     {
-        $payer = User::find($request->payer_id);
-        $payee = User::find($request->payee_id);
-
-        if (!$payer || !$payee || $payer->wallet->balance < $request->value) {
-            // return Response::json('Impossivel realizar operação', 400);
-            return "Impossivel realizar opereção";
-        }
-
-        $payersWallet = Wallet::find($payer->wallet->id);
-        $payersWallet->balance -= $request->value;
-        $payersWallet->save();
-
-        // Aumentar saldo de destinatário
-        $payeesWallet = Wallet::find($payee->wallet->id);
-        $payeesWallet->balance += $request->value;
-        $payeesWallet->save();
-
-
-        return Transaction::create([
-            'payer_id' => $request->payer_id,
-            'payee_id' => $request->payee_id,
-            'value' => $request->value,
-        ]);
+        $res = $this->service->store($request);
+        return $res;
     }
 
     /**
@@ -69,10 +56,8 @@ class TransactionController extends Controller
      */
     public function show($id)
     {
-        $transaction = Transaction::find($id);
-        $transaction['payer'] = $transaction->payer;
-        $transaction['payee'] = $transaction->payee;
-        return $transaction;
+        $res = $this->service->show($id);
+        return $res;
     }
 
     /**
